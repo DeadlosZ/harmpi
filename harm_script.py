@@ -128,22 +128,6 @@ def Ebindisco(a):
     #Eb = (1.-3.**(-0.5))*a**2
     return( Eb )
 
-def mkmov_simple(starti=0,endi=400):
-    for i in xrange(starti,endi+1):
-        rd("dump%03d" % i);
-        aphi=psicalc()
-        if i == starti: amax = aphi.max()
-        cs, cb = plco(np.log10(rho),levels=np.linspace(-8,0,100),isfilled=1,k=0,xy=1,xmax=10,ymax=5,dobh=1,cb=1,extend="both",pretty=1)
-        ax = plt.gca()
-        ax.set_xlabel(r"$R\ [r_g]$",fontsize=20,labelpad=-5)
-        ax.set_ylabel(r"$z\ [r_g]$",fontsize=20,labelpad=-5)
-        cb.ax.set_xlabel(r"$\log\rho$",fontsize=20,ha="left")
-        plc(aphi,levels=np.linspace(-amax,amax,10)[1:-1],colors="white",linewidths=2,xy=-1)
-        print(i);
-        plt.title("t=%.4g"%np.round(t)); 
-        plt.draw();
-        plt.savefig("frame%03d.png"%i)
-
 def convert_wrapper(**kwargs):
     if len(sys.argv[2:])==2 and sys.argv[2].isdigit() and sys.argv[3].isdigit():
         whichi = int(sys.argv[2])
@@ -996,8 +980,41 @@ def aux():
     faraday()
     Tcalcud()
 
+def mkmov_simple(starti=0,endi=400):
+    # get total range
+    for i in range(starti, endi+1):
+        rg("gdump")
+        rd('dump%03d' % i);
+        alpha = (-guu[0,0])**(-0.5)
+        gamma = alpha*uu[0]
+        VARVAR = gamma
+        if i==0:
+            VARMIN = np.min(VARVAR)
+            VARMAX = np.max(VARVAR)
+            print("Initial range:")
+            print("min: ", VARMIN, "max: ",VARMAX)
+        VARMIN = np.min([VARMIN,np.min(VARVAR)])
+        VARMAX = np.max([VARMAX,np.max(VARVAR)])
+        print("Range: ",VARMIN,VARMAX)
+
+    for i in range(starti,endi+1):
+        rg("gdump")
+        rd("dump%03d" % i);
+        alpha = (-guu[0,0])**(-0.5)
+        gamma = alpha*uu[0]
+        VARVAR = gamma
+        cs, cb = plco(VARVAR,levels=np.linspace(VARMIN,VARMAX,100),isfilled=1,xmax=1000,ymax=500,cb=1,xy=1)
+        ax = plt.gca()
+        ax.set_xlabel(r"$R\ [r_g]$",fontsize=20,labelpad=-5)
+        ax.set_ylabel(r"$z\ [r_g]$",fontsize=20,labelpad=-5)
+        cb.ax.set_xlabel(r"$\log\rho$",fontsize=20,ha="left")
+        print(i);
+        plt.title("t=%.4g"%np.round(t)); 
+        plt.draw();
+        plt.savefig("frame%03d.png"%i)
+
 if __name__ == "__main__":
-    if False:
+    if False:       # 1D plots
         #1D plot example
         plt.clf()
         rg("gdump")
@@ -1007,13 +1024,19 @@ if __name__ == "__main__":
         plt.yscale("log")
         plt.xlabel("r")
         plt.ylabel("rho")
-    if False:
+    if True:       # 2D plots
         #2D plot example
         plt.clf()
         rg("gdump")
         rd("dump000")
+        alpha = (-guu[0,0])**(-0.5)
+        gamma = alpha*uu[0]
+        VARVAR = gamma
         #R-z plot of the logarithm of density distribution
-        plc(r,np.log10(rho),cb=True,xy=1,xmax=100,ymax=50)
+        plc(VARVAR,levels=np.linspace(np.min(VARVAR),np.max(VARVAR),100),cb=True,xy=1,xmax=1000,ymax=500,isfilled=True)
+        plt.show()
+    if False:        # movie
+        mkmov_simple(starti=0,endi=2000)
 
 
 def bhole():
