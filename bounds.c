@@ -21,7 +21,7 @@
     [2] Noble, S. C., Gammie, C. F., McKinney, J. C., \& Del Zanna, L. \ 2006, 
         Astrophysical Journal, 641, 626.
 
-   
+    
     Further, we strongly encourage you to obtain the latest version of 
     HARM directly from our distribution website:
     http://rainman.astro.uiuc.edu/codelib/
@@ -241,6 +241,21 @@ void bound_x2up_polefix( double prim[][N2M][N3M][NPR] )
   
 }
 
+//YOAV: added wind boundry
+void bound_wind( double prim[][N2M][N3M][NPR] ) {
+  int i,k;
+  for (i=-N1G; i<N1+N1G; i++)
+  {
+    for (k=-N3G; k<N3+N3G; k++)
+    {
+      prim[i][N2/2-1][k][RHO] = 0.01;
+      prim[i][N2/2][k][RHO] = 0.01;
+      prim[i][N2/2-1][k][U2] = -1/(Rin+i*(Rout-Rin)/N2);
+      prim[i][N2/2][k][U2] = 1/(Rin+i*(Rout-Rin)/N2);
+    }
+  }
+}
+
 /* polar BCs */
 //inner theta boundary
 void bound_x2dn( double prim[][N2M][N3M][NPR] )
@@ -248,6 +263,9 @@ void bound_x2dn( double prim[][N2M][N3M][NPR] )
   int i,j,k,m,jref ;
   struct of_geom geom ;
   int iNg, jNg, kNg;
+
+  //YOAV: generate wind
+  bound_wind( prim );
 
 #if(N2!=1)
   //only do anything if physically in an MPI process that touches the inner pole
